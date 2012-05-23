@@ -274,27 +274,34 @@ class Mailer:
         #d = ModelDict(kw)
         context = django.template.Context(kw)
 
-        subject_template = django.template.Template(subject)
-        subject = subject_template.render(context)
+        if isinstance(subject, (str, unicode)):
+            if subject.endswith(".html"):
+                subject = django.template.loader.get_template(subject)
+            else:
+                subject = django.template.Template(subject)
+        subject = subject.render(context)
 
-        body_template = django.template.Template(body)
-        html = body
 
-        html = body_template.render(context)
+        if isinstance(body, (str, unicode)):
+            if body.endswith(".html"):
+                body = django.template.loader.get_template(body)
+            else:
+                body = django.template.Template(body)
+        body = body.render(context)
 
         # Make sure we have a str and not a unicode, or html2text will mess up
-        if type(html) is str:
+        if type(body) is str:
             pass
         else:
-            html=html.encode('utf-8')
+            body=body.encode('utf-8')
 
-        plain = djangomail.html2text.html2text(html)
+        plain = djangomail.html2text.html2text(body)
 
         # Make sure we have a unicode and not a str
         plain = plain.decode('utf-8')
 
         try:                    
-            cls.send_email(subject, recipient_mail, plain, html, attachments)
+            cls.send_email(subject, recipient_mail, plain, body, attachments)
         except:
             import traceback as tb
             msg = tb.format_exc()
