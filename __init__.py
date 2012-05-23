@@ -44,6 +44,11 @@ from email import Encoders
 import BeautifulSoup
 import settings
 
+from django.utils.translation import ugettext_lazy as _
+import djangomail.html2text
+import django.template
+
+
 def unalias_charset(charset):
     if charset:
         return charset.lower().replace("windows-", 'cp')
@@ -160,8 +165,8 @@ def remap_sources(text, remap):
 
 class Mailer:
 
-    @staticmethod
-    def send_email(subject, recipient, body_text, body_html, attachments=[]):
+    @classmethod
+    def send_email(cls, subject, recipient, body_text, body_html, attachments=[]):
         try:
             # Create the message
             msg = email.mime.multipart.MIMEMultipart('related')
@@ -241,4 +246,58 @@ class Mailer:
         except:
             traceback.print_exc()
             raise
+
+    @classmethod
+    def send_template_mail(cls, subject, recipient, body, attachments=[], **kw):
+        """
+        Format message and send it.
+        """
+        from djangomail import Mailer
+
+        done = {}
+
+        if hasattr(recipient,'email'):
+            recipient_mail = recipient.email
+        else:
+            recipient_mail = recipient
+
+        if recipient_mail is None:
+            return
+
+        if recipient_mail in done:
+            return
+
+        done[recipient_mail] = recipient
+
+        kw['recipient']=recipient
+
+        #d = ModelDict(kw)
+        context = django.template.Context(kw)
+
+        subject_template = django.template.Template(subject)
+        subject = subject_template.render(context)
+
+        body_template = django.template.Template(body)
+        html = body
+
+        html = body_template.render(context)
+
+        # Make sure we have a str and not a unicode, or html2text will mess up
+        if type(html) is str:
+            pass
+        else:
+            html=html.encode('utf-8')
+
+        plain = djangomail.html2text.html2text(html)
+
+        # Make sure we have a unicode and not a str
+        plain = plain.decode('utf-8')
+
+        try:                    
+            cls.send_email(subject, recipient_mail, plain, html, attachments)
+        except:
+            import traceback as tb
+            msg = tb.format_exc()
+            logging.getLogger('mail').error('Failed to send email to %s. Error: %s' % 
+                                            (recipient.email, msg))
 
