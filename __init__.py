@@ -42,7 +42,7 @@ import email.mime.message
 import email.mime.base
 from email import Encoders
 import BeautifulSoup
-import settings
+from django.conf import settings
 
 from django.utils.translation import ugettext_lazy as _
 import djangomail.html2text
@@ -225,23 +225,27 @@ class Mailer:
             for i in attachments:
                 msg.attach(i)
 
-            # Send it
-            if settings.DJANGOMAIL_USE_SSL:
-                s = smtplib.SMTP_SSL(settings.DJANGOMAIL_HOST, settings.DJANGOMAIL_PORT)
+            if settings.DJANGOMAIL_FAKEMAIL:
+                print "================================{%s}================================" % recipient
+                print msg.as_string()
             else:
-                s = smtplib.SMTP(settings.DJANGOMAIL_HOST, settings.DJANGOMAIL_PORT)
+                # Send it
+                if settings.DJANGOMAIL_USE_SSL:
+                    s = smtplib.SMTP_SSL(settings.DJANGOMAIL_HOST, settings.DJANGOMAIL_PORT)
+                else:
+                    s = smtplib.SMTP(settings.DJANGOMAIL_HOST, settings.DJANGOMAIL_PORT)
 
-            s.helo()
+                s.helo()
 
-            if settings.DJANGOMAIL_USE_TLS:
-                s.starttls()
+                if settings.DJANGOMAIL_USE_TLS:
+                    s.starttls()
 
-            if settings.DJANGOMAIL_USERNAME:
-                s.login(settings.DJANGOMAIL_USERNAME, settings.DJANGOMAIL_PASSWORD)
+                if settings.DJANGOMAIL_USERNAME:
+                    s.login(settings.DJANGOMAIL_USERNAME, settings.DJANGOMAIL_PASSWORD)
 
-            s.sendmail("", recipient, # Empty sender as per http://marc.merlins.org/netrants/autoresponders.txt
-                       msg.as_string())
-            s.quit()
+                s.sendmail("", recipient, # Empty sender as per http://marc.merlins.org/netrants/autoresponders.txt
+                           msg.as_string())
+                s.quit()
             logging.getLogger('mail').info('Sent email with subject %s to %s' % (subject, recipient))
         except:
             traceback.print_exc()

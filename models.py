@@ -3,7 +3,7 @@ from django.db import models
 from djangomail.html2text import html2text
 from django.utils.translation import ugettext_lazy as _
 import django.template
-import settings
+from django.conf import settings
 
 
 class EmailTemplate(models.Model):
