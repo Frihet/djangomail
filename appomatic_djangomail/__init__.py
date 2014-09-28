@@ -32,7 +32,7 @@ import cgi
 import os 
 
 from email.Header import decode_header
-import djangomail.models
+import appomatic_djangomail.models
 import scrubber
 
 import email.mime.image
@@ -45,7 +45,7 @@ import BeautifulSoup
 from django.conf import settings
 
 from django.utils.translation import ugettext_lazy as _
-import djangomail.html2text
+import appomatic_djangomail.html2text
 import django.template
 
 
@@ -256,7 +256,7 @@ class Mailer:
         """
         Format message and send it.
         """
-        from djangomail import Mailer
+        from appomatic_djangomail import Mailer
 
         done = {}
 
@@ -299,7 +299,7 @@ class Mailer:
         else:
             body=body.encode('utf-8')
 
-        plain = djangomail.html2text.html2text(body)
+        plain = appomatic_djangomail.html2text.html2text(body)
 
         # Make sure we have a unicode and not a str
         plain = plain.decode('utf-8')

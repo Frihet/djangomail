@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.db import models
-from djangomail.html2text import html2text
+from appomatic_djangomail.html2text import html2text
 from django.utils.translation import ugettext_lazy as _
 import django.template
 from django.conf import settings
@@ -28,7 +28,7 @@ class EmailTemplate(models.Model):
 
     #   logging.getLogger('ticket').warning('Send email to %s' % repr(recipients))
 
-        from djangomail import Mailer
+        from appomatic_djangomail import Mailer
         for recipient in recipients:
             Mailer.send_template_mail(self.subject, recipient, self.body, **kw)
 
